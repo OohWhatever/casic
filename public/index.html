@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Casino Lab - Авторизация</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Casino Lab — Авторизация</h1>
+    </header>
+    <main>
+      <div class="card">
+        <h2>Регистрация</h2>
+        <form id="register-form">
+          <label for="reg-username">Логин</label>
+          <input id="reg-username" name="username" required />
+          <label for="reg-password">Пароль</label>
+          <input id="reg-password" name="password" type="password" required />
+          <label for="reg-promo">Промокод (опционально)</label>
+          <input id="reg-promo" name="promo" placeholder="SCAM" />
+          <button type="submit">Зарегистрироваться</button>
+        </form>
+        <div id="register-status" class="status" hidden></div>
+      </div>
+
+      <div class="card">
+        <h2>Логин</h2>
+        <form id="login-form">
+          <label for="login-username">Логин</label>
+          <input id="login-username" name="username" required />
+          <label for="login-password">Пароль</label>
+          <input id="login-password" name="password" type="password" required />
+          <button type="submit">Войти</button>
+        </form>
+        <div id="login-status" class="status" hidden></div>
+      </div>
+
+      <div class="card nav">
+        <a href="/profile.html">Личный кабинет</a>
+        <a href="/slots.html">Слот-машины</a>
+        <a href="/bets.html">Ставки</a>
+      </div>
+    </main>
+    <script src="/js/app.js"></script>
+    <script>
+      const regForm = document.getElementById('register-form');
+      const regStatus = document.getElementById('register-status');
+      const loginForm = document.getElementById('login-form');
+      const loginStatus = document.getElementById('login-status');
+
+      regForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        regStatus.hidden = true;
+        try {
+          const body = {
+            username: regForm.username.value,
+            password: regForm.password.value,
+            promo: regForm.promo.value,
+          };
+          const res = await api('/register', { method: 'POST', body });
+          regStatus.textContent = res.promoApplied
+            ? 'Успех! Промокод SCAM применен: 1000₽ фрибетов.'
+            : 'Успешная регистрация.';
+          regStatus.classList.remove('error');
+          regStatus.hidden = false;
+        } catch (err) {
+          regStatus.textContent = err.message;
+          regStatus.classList.add('error');
+          regStatus.hidden = false;
+        }
+      });
+
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        loginStatus.hidden = true;
+        try {
+          await api('/login', {
+            method: 'POST',
+            body: {
+              username: loginForm.username.value,
+              password: loginForm.password.value,
+            },
+          });
+          loginStatus.textContent = 'Вход выполнен. Можно перейти в личный кабинет.';
+          loginStatus.classList.remove('error');
+          loginStatus.hidden = false;
+          setTimeout(() => {
+            window.location.href = '/profile.html';
+          }, 400);
+        } catch (err) {
+          loginStatus.textContent = err.message;
+          loginStatus.classList.add('error');
+          loginStatus.hidden = false;
+        }
+      });
+    </script>
+  </body>
+</html>

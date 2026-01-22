@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Casino Lab - Ставки</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Ставки (шаблон)</h1>
+    </header>
+    <main>
+      <div class="nav card">
+        <a href="/index.html">Авторизация</a>
+        <a href="/profile.html">Профиль</a>
+        <a href="/slots.html">Слот-машины</a>
+      </div>
+      <div class="card">
+        <div id="profile-box">Проверка профиля...</div>
+      </div>
+      <div class="card">
+        <h2>Матчи</h2>
+        <ul id="matches"></ul>
+        <p>
+          Логика ставок появится позже.
+          <!-- Betting logic will be implemented later -->
+        </p>
+      </div>
+    </main>
+    <script src="/js/app.js"></script>
+    <script>
+      loadProfile();
+      async function loadMatches() {
+        try {
+          const data = await api('/bets');
+          const ul = document.getElementById('matches');
+          ul.innerHTML = '';
+          data.matches.forEach((m) => {
+            const li = document.createElement('li');
+            li.textContent = `${m.teams} (коэффициенты ${m.odds})`;
+            ul.appendChild(li);
+          });
+        } catch (err) {
+          document.getElementById('matches').textContent = 'Ошибка загрузки матчей';
+          console.error(err);
+        }
+      }
+      loadMatches();
+    </script>
+  </body>
+</html>

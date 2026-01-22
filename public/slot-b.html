@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Slot Machine B</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Slot Machine B</h1>
+    </header>
+    <main>
+      <div class="nav card">
+        <a href="/slots.html">Назад к списку</a>
+        <a href="/index.html">Авторизация</a>
+        <a href="/profile.html">Профиль</a>
+      </div>
+      <div class="card">
+        <div id="profile-box">Проверка профиля...</div>
+      </div>
+      <div class="card">
+        <p>Классический 3-барабанный слот. Символы: 💎 A K Q J 10. Выплаты см. ниже. Итоговые символы приходят с сервера.</p>
+        <label for="stake">Ставка</label>
+        <input id="stake" type="number" min="1" placeholder="200" value="200" />
+        <label for="balance-type">Баланс</label>
+        <select id="balance-type">
+          <option value="real">Основной баланс</option>
+          <option value="freebet">Фрибеты</option>
+        </select>
+        <div id="preview" class="status"></div>
+        <div class="slot-machine">
+          <div class="reel shadow" id="reel-1">
+            <div class="symbols">
+              <div class="symbol">💎</div>
+              <div class="symbol">A</div>
+              <div class="symbol">K</div>
+            </div>
+          </div>
+          <div class="reel shadow" id="reel-2">
+            <div class="symbols">
+              <div class="symbol">Q</div>
+              <div class="symbol">J</div>
+              <div class="symbol">10</div>
+            </div>
+          </div>
+          <div class="reel shadow" id="reel-3">
+            <div class="symbols">
+              <div class="symbol">💎</div>
+              <div class="symbol">A</div>
+              <div class="symbol">K</div>
+            </div>
+          </div>
+        </div>
+        <button id="spin-btn">Spin</button>
+        <div id="spin-status" class="status" hidden></div>
+        <div class="card" style="margin-top:12px;">
+          <strong>Пейтаблица</strong>
+          <div class="paytable">
+            <div class="item">
+              <div class="label">Три одинаковых</div>
+              <div>💎💎💎 ×30</div>
+              <div>AAA ×15</div>
+              <div>KKK ×10</div>
+              <div>QQQ ×7</div>
+              <div>JJJ ×5</div>
+              <div>10 10 10 ×3</div>
+            </div>
+            <div class="item">
+              <div class="label">Шаблоны</div>
+              <div>💎 * 💎 ×8</div>
+              <div>A * A ×4</div>
+              <div>Разные A/K/Q ×2</div>
+            </div>
+            <div class="item">
+              <div class="label">Две одинаковых</div>
+              <div>💎💎* ×5</div>
+              <div>AA* ×3</div>
+              <div>KK* ×2</div>
+              <div>QQ* ×1.5</div>
+              <div>JJ* ×1</div>
+              <div>10 10* ×0.5</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script src="/js/app.js"></script>
+    <script>
+      loadProfile();
+      const renderPreview = attachSlotPreview({
+        stakeInputId: 'stake',
+        previewId: 'preview',
+        defaultStake: 200,
+        formatter: ({ stake }) => `Ставка: ${stake}₽ (выигрыш рассчитывается по таблице выше)`,
+      });
+      const symbols = ['💎', 'A', 'K', 'Q', 'J', '10'];
+      const animate = createSlotAnimator({
+        reelIds: ['reel-1', 'reel-2', 'reel-3'],
+        symbols,
+        durations: [800, 1100, 1400],
+      });
+      const statusBox = document.getElementById('spin-status');
+      const spinBtn = document.getElementById('spin-btn');
+      document.getElementById('spin-btn').addEventListener('click', async () => {
+        statusBox.hidden = true;
+        statusBox.classList.remove('error');
+        renderPreview();
+        const bet = Number(document.getElementById('stake').value) || 200;
+        const balanceType = document.getElementById('balance-type').value;
+        spinBtn.disabled = true;
+        statusBox.textContent = 'Спин...';
+        statusBox.hidden = false;
+        let spinResult;
+        try {
+          spinResult = await api('/casino/slot/spin', {
+            method: 'POST',
+            body: { bet_amount: bet, balance_type: balanceType },
+          });
+        } catch (err) {
+          statusBox.textContent = err.message;
+          statusBox.classList.add('error');
+          statusBox.hidden = false;
+          spinBtn.disabled = false;
+          return;
+        }
+
+        await animate(spinResult.reels);
+        setProfileBox(spinResult);
+        statusBox.textContent =
+          spinResult.win_amount > 0
+            ? `Выигрыш x${spinResult.multiplier} → +${spinResult.win_amount}₽`
+            : 'Проигрыш';
+        statusBox.classList.remove('error');
+        statusBox.hidden = false;
+        spinBtn.disabled = false;
+      });
+    </script>
+  </body>
+</html>
